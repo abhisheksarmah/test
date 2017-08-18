@@ -178,17 +178,24 @@
 
   
     
-      <script>function onButtonClick() {
+      <script>
+		  
+var bluetoothDevice;
+		  
+function onButtonClick() {
   let filters = [];
-
+	
   let filterService = document.querySelector('#service').value;
+ console.log(filterService);
   if (filterService.startsWith('0x')) {
     filterService = parseInt(filterService);
   }
   if (filterService) {
     filters.push({services: [filterService]});
   }
-
+	
+	
+	
   let filterName = document.querySelector('#name').value;
   if (filterName) {
     filters.push({name: filterName});
@@ -205,19 +212,87 @@
   } else {
     options.filters = filters;
   }
-
+    bluetoothDevice = null;
+  log('filters....'+filters);
   log('Requesting Bluetooth Device...');
   log('with ' + JSON.stringify(options));
-  navigator.bluetooth.requestDevice(options)
+  
+ /* navigator.bluetooth.requestDevice(options)
+.then(device => {
+this.device = device;
+console.log('> Found ' + this.device.name);
+console.log('Connecting to GATT Server...');
+//console.log(device.gatt.connect());
+return device.gatt.connect();
+})
+.then(server => {
+console.log('Getting server...'+server.connected);
+this.server = server;
+
+	console.log('server device: '+this.server.device);
+	//console.log('Getting service...'+service.uuid);
+	//wait(3000);
+	console.log('server device: '+this.server.device);
+	return Promise.all([
+		wait(3000),
+		console.log('after 3 second '),		
+		server.getPrimaryService(0x180f)
+		.then(service => {
+			console.log('service get');
+			console.log(service.uuid);
+		  return this._cacheCharacteristic(service, 'battery_level');
+		}),
+		console.log('after getPrimaryService '),
+	])
+		.then(values => { console.log('value' + values); });
+})*/
+
+  
+ navigator.bluetooth.requestDevice(options)
   .then(device => {
+	  bluetoothDevice = device;
     log('> Name:             ' + device.name);
     log('> Id:               ' + device.id);
     log('> Connected:        ' + device.gatt.connected);
+    if (!device.gatt.connected) {
+		 log("Connected");
+    return device.gatt.connect();
+  } else {
+    // Already connected.
+    return Promise.resolve();
+  }
+    
+   //  return connect();
   })
+  .then(server => {
+console.log('Getting server...'+server.connected);
+this.server = server;
+
+console.log('server device: '+this.server.device);
+console.log('Getting service...'+service.uuid);
+
+
+})
+.then(_=> this.server.getPrimaryService(0x180f))
+.then(service => {
+  console.log('service get');
+  console.log(service.uuid);
+  return this._cacheCharacteristic(service, 'battery_level');
+})
   .catch(error => {
     log('Argh! ' + error);
   });
 }
+
+function connect() {
+  log('Connecting to Bluetooth Device...');
+  return bluetoothDevice.gatt.connect()
+  .then(server => {
+    log('> Bluetooth Device connected');
+  });
+}
+
+
 </script>
     
   
